@@ -21,7 +21,7 @@ dependencies = [
 
     # ── Auth ───────────────────────────────────────────────────
     "python-jose[cryptography]>=3.3.0",  # JWT encode/decode
-    "passlib[bcrypt]>=1.7.4",            # password hashing
+    "bcrypt>=4.0.0",            # password hashing
 
     # ── Config & Validation ────────────────────────────────────
     "pydantic>=2.7.0",            # data validation (v2)
