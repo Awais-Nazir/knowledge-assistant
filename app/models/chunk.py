@@ -1,6 +1,5 @@
 import uuid
 
-from app.models.document import Document
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import ForeignKey, Index, Integer, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID

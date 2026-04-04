@@ -5,8 +5,6 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin, UUIDMixin
-from app.models.memory import ConversationMemory
-from app.models.user import User
 
 
 class ChatSession(UUIDMixin, TimestampMixin, Base):

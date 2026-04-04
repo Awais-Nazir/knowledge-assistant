@@ -5,8 +5,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 import enum
 
 from app.models.base import Base, TimestampMixin, UUIDMixin
-from app.models.chunk import DocumentChunk
-from app.models.user import User
 
 
 class DocumentStatus(str, enum.Enum):

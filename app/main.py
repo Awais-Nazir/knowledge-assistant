@@ -8,6 +8,8 @@ from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.core.exceptions import AppException
 from app.core.logging import get_logger, setup_logging
+from app.core.database import engine
+from sqlalchemy import text
 
 logger = get_logger(__name__)
 
@@ -23,6 +25,9 @@ async def lifespan(app: FastAPI):
         env=settings.APP_ENV,
         debug=settings.DEBUG,
     )
+    async with engine.connect() as conn:
+        await conn.execute(text("SELECT 1"))
+    logger.info("database connection validated")
     yield
     # everything after yield runs on shutdown
     logger.info("application shutting down")
