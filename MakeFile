@@ -8,6 +8,8 @@ run:
 worker:
 	uv run celery -A app.workers.celery_app worker --loglevel=info
 
+workers:
+	uv run celery -A app.workers.celery_app worker --loglevel=info --pool=solo	
 # ── Database migrations ───────────────────────────────
 migrate:
 	uv run alembic upgrade head

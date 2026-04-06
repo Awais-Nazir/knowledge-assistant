@@ -215,3 +215,5 @@ Learning/
 Requirements/
 supporting_docs/
 test.py
+uploads/*
+uploads/
