@@ -21,13 +21,13 @@ dependencies = [
 
     # ── Auth ───────────────────────────────────────────────────
     "python-jose[cryptography]>=3.3.0",  # JWT encode/decode
-    "passlib[bcrypt]>=1.7.4",            # password hashing
+    "bcrypt>=4.0.0",            # password hashing
 
     # ── Config & Validation ────────────────────────────────────
     "pydantic>=2.7.0",            # data validation (v2)
     "pydantic-settings>=2.3.0",   # reads .env into pydantic models
     "python-dotenv>=1.0.0",       # loads .env file
-
+    'pydantic[email]',
     # ── File handling ──────────────────────────────────────────
     "python-multipart>=0.0.9",    # required for FastAPI file uploads
     "aiofiles>=23.0.0",           # async file read/write

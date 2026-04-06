@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-import structlog
+# import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -8,6 +8,10 @@ from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.core.exceptions import AppException
 from app.core.logging import get_logger, setup_logging
+from app.core.database import engine
+from sqlalchemy import text
+from app.api.routers.auth import router as auth_router
+
 
 logger = get_logger(__name__)
 
@@ -23,6 +27,9 @@ async def lifespan(app: FastAPI):
         env=settings.APP_ENV,
         debug=settings.DEBUG,
     )
+    async with engine.connect() as conn:
+        await conn.execute(text("SELECT 1"))
+    logger.info("database connection validated")
     yield
     # everything after yield runs on shutdown
     logger.info("application shutting down")
@@ -49,6 +56,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# after middleware section, before exception handlers
+app.include_router(auth_router, prefix="/api/v1")
 
 # ── Exception handlers ─────────────────────────────────────────
 @app.exception_handler(AppException)
