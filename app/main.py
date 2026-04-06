@@ -11,6 +11,9 @@ from app.core.logging import get_logger, setup_logging
 from app.core.database import engine
 from sqlalchemy import text
 from app.api.routers.auth import router as auth_router
+from app.api.routers.documents import router as documents_router
+
+
 
 
 logger = get_logger(__name__)
@@ -58,6 +61,7 @@ app.add_middleware(
 
 # after middleware section, before exception handlers
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(documents_router, prefix="/api/v1")
 
 # ── Exception handlers ─────────────────────────────────────────
 @app.exception_handler(AppException)
