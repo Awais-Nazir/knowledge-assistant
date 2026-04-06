@@ -40,7 +40,8 @@ down:
 shell:
 	uv run python -c "import asyncio; import IPython; IPython.embed()"
 
-
+# connect_db:
+# 	docker exec -it ka_postgres psql -U postgres -d knowledge_assistant
 
 # git add pyproject.toml .env.example Makefile docker-compose.yml uv.lock
 # git commit -m "chore(setup): add project foundation — deps, env, docker, makefile"

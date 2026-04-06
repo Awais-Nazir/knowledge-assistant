@@ -27,7 +27,7 @@ dependencies = [
     "pydantic>=2.7.0",            # data validation (v2)
     "pydantic-settings>=2.3.0",   # reads .env into pydantic models
     "python-dotenv>=1.0.0",       # loads .env file
-
+    'pydantic[email]',
     # ── File handling ──────────────────────────────────────────
     "python-multipart>=0.0.9",    # required for FastAPI file uploads
     "aiofiles>=23.0.0",           # async file read/write
