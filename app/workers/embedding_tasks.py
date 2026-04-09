@@ -3,48 +3,92 @@ from app.workers.celery_app import celery_app
 
 @celery_app.task(bind=True, max_retries=3)
 def process_document(self, document_id: str):
-    """
-    Background task — processes a document into chunks and embeddings.
-    We'll implement the full RAG pipeline logic here in feature/rag-pipeline.
-    For now it's a placeholder that marks the document as ready.
-    """
     import asyncio
-    from app.core.config import settings
 
     async def _process():
-        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+        import uuid
+        from sqlalchemy.ext.asyncio import (
+            async_sessionmaker,
+            create_async_engine,
+        )
+        from app.core.config import settings
         from app.models.document import DocumentStatus
         from app.repositories.document_repo import document_repo
-        import uuid
+        from app.repositories.chunk_repo import chunk_repo
+        from app.rag.chunker import extract_text_from_file, semantic_chunk
+        from app.rag.factory import get_embedder
+        from app.storage.local import get_storage
 
         engine = create_async_engine(settings.DATABASE_URL)
-        SessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False)
+        SessionLocal = async_sessionmaker(
+            bind=engine, expire_on_commit=False
+        )
 
         async with SessionLocal() as db:
-            document = await document_repo.get_by_id(db, uuid.UUID(document_id))
+            document = await document_repo.get_by_id(
+                db, uuid.UUID(document_id)
+            )
             if not document:
                 return
 
             try:
+                # mark as processing
                 await document_repo.update_status(
                     db, document, DocumentStatus.PROCESSING
                 )
                 await db.commit()
 
-                # ── RAG pipeline goes here (feature/rag-pipeline) ──
-                # chunker.chunk(document)
-                # embedder.embed(chunks)
-                # vector_store.save(chunks)
+                # load file from storage
+                storage = get_storage()
+                file_path = await storage.get_url(document.storage_path)
+                with open(file_path, "rb") as f:
+                    file_bytes = f.read()
+
+                # extract text
+                text = extract_text_from_file(
+                    file_bytes, document.mime_type
+                )
+                if not text.strip():
+                    raise ValueError("No text could be extracted from file")
+
+                # chunk text
+                chunks = semantic_chunk(text)
+
+                # embed chunks
+                embedder = get_embedder()
+                vectors = await embedder.embed(chunks)
+
+                # store chunks in database
+                for i, (chunk_text, vector) in enumerate(
+                    zip(chunks, vectors)
+                ):
+                    await chunk_repo.create(
+                        db,
+                        document_id=document.id,
+                        user_id=document.user_id,
+                        chunk_index=i,
+                        content=chunk_text,
+                        embedding=vector,
+                        metadata_={
+                            "original_name": document.original_name,
+                            "chunk_index": i,
+                        },
+                    )
 
                 await document_repo.update_status(
-                    db, document, DocumentStatus.READY, chunk_count=0
+                    db,
+                    document,
+                    DocumentStatus.READY,
+                    chunk_count=len(chunks),
                 )
                 await db.commit()
 
             except Exception as exc:
                 await document_repo.update_status(
-                    db, document, DocumentStatus.FAILED,
-                    error_message=str(exc)
+                    db,
+                    document,
+                    DocumentStatus.FAILED,
+                    error_message=str(exc),
                 )
                 await db.commit()
                 raise self.retry(exc=exc, countdown=60)
