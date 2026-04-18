@@ -31,10 +31,16 @@ class DocumentChunk(UUIDMixin, TimestampMixin, Base):
         Text,
         nullable=False,
     )
+    # for HuggingFace bge-small-en-v1.5
     embedding: Mapped[list[float]] = mapped_column(
-        Vector(1536),
-        nullable=True,
-    )
+        Vector(384),
+        nullable=True)
+
+    # for HuggingFace bge-large-en-v1.5
+    # embedding: Mapped[list[float]] = mapped_column(Vector(1024), nullable=True)
+
+    # for OpenAI text-embedding-3-small (default)
+    # embedding: Mapped[list[float]] = mapped_column(Vector(1536), nullable=True)
     metadata_: Mapped[dict] = mapped_column(
         "metadata",
         JSONB,

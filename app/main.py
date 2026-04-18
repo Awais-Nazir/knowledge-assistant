@@ -1,45 +1,35 @@
 from contextlib import asynccontextmanager
 
-# import structlog
+import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 from app.core.config import settings
+from app.core.database import engine
 from app.core.exceptions import AppException
 from app.core.logging import get_logger, setup_logging
-from app.core.database import engine
-from sqlalchemy import text
-from app.api.routers.auth import router as auth_router
-from app.api.routers.documents import router as documents_router
-
-
-
+from app.core.middleware import RequestLoggingMiddleware
 
 logger = get_logger(__name__)
 
 
-# ── Lifespan ───────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # everything before yield runs on startup
     setup_logging(debug=settings.DEBUG)
-    logger.info(
-        "application starting",
-        app_name=settings.APP_NAME,
-        env=settings.APP_ENV,
-        debug=settings.DEBUG,
-    )
+    logger.info("application starting", env=settings.APP_ENV)
+
     async with engine.connect() as conn:
         await conn.execute(text("SELECT 1"))
-    logger.info("database connection validated")
+    logger.info("database connection verified")
+
     yield
-    # everything after yield runs on shutdown
+
+    await engine.dispose()
     logger.info("application shutting down")
 
 
-
-# ── App instance ───────────────────────────────────────────────
 app = FastAPI(
     title=settings.APP_NAME,
     version="0.1.0",
@@ -49,8 +39,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
 # ── Middleware ─────────────────────────────────────────────────
+app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins_list,
@@ -58,10 +48,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# after middleware section, before exception handlers
-app.include_router(auth_router, prefix="/api/v1")
-app.include_router(documents_router, prefix="/api/v1")
 
 # ── Exception handlers ─────────────────────────────────────────
 @app.exception_handler(AppException)
@@ -86,11 +72,7 @@ async def app_exception_handler(request: Request, exc: AppException):
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
-    logger.error(
-        "unhandled exception",
-        exc_info=exc,
-        path=request.url.path,
-    )
+    logger.error("unhandled exception", exc_info=exc, path=request.url.path)
     return JSONResponse(
         status_code=500,
         content={
@@ -103,12 +85,13 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
         },
     )
 
+# ── Routers ────────────────────────────────────────────────────
+from app.api.routers.auth import router as auth_router
+from app.api.routers.chat import router as chat_router
+from app.api.routers.documents import router as documents_router
+from app.api.routers.health import router as health_router
 
-# ── Health check ───────────────────────────────────────────────
-@app.get("/health")
-async def health():
-    return {
-        "status": "healthy",
-        "app": settings.APP_NAME,
-        "env": settings.APP_ENV,
-    }
+app.include_router(health_router)
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(documents_router, prefix="/api/v1")
+app.include_router(chat_router, prefix="/api/v1")

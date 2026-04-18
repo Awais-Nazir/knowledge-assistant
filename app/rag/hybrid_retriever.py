@@ -34,14 +34,20 @@ async def hybrid_retrieve(
     query_vector = await embedder.embed_query(query)
     vector_str = f"[{','.join(str(x) for x in query_vector)}]"
 
+
+# PREVIOUSLY:
+#  vector::vector
+#  NOW:
+#  1 - (embedding <=> CAST(:vector AS vector)) as score
+
     dense_results = await db.execute(
         text("""
             SELECT id, document_id, content, metadata,
-                   1 - (embedding <=> :vector::vector) as score
+                    1 - (embedding <=> CAST(:vector AS vector)) as score
             FROM document_chunks
             WHERE user_id = :user_id
               AND embedding IS NOT NULL
-            ORDER BY embedding <=> :vector::vector
+            ORDER BY embedding <=> CAST(:vector AS vector)
             LIMIT :limit
         """),
         {

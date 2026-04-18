@@ -1,11 +1,11 @@
 from openai import AsyncOpenAI
 from app.rag.interfaces import BaseEmbedder
-
+from app.core.config import settings
 
 class OpenAIEmbedder(BaseEmbedder):
 
     def __init__(self, model: str = "text-embedding-3-small"):
-        self.client = AsyncOpenAI()
+        self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
         self.model = model
 
     async def embed(self, texts: list[str]) -> list[list[float]]:

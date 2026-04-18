@@ -30,7 +30,10 @@ class FlashRankReranker(BaseReranker):
         ranker = _load_ranker()
         request = RerankRequest(
             query=query,
-            passages=[{"text": doc} for doc in documents],
+            passages=[
+    {"index": i, "text": doc}
+    for i, doc in enumerate(documents)
+],
         )
 
         loop = asyncio.get_event_loop()
@@ -38,8 +41,8 @@ class FlashRankReranker(BaseReranker):
             None,
             lambda: ranker.rerank(request),
         )
-
         reranked = [
+            
             RerankedChunk(
                 index=r["index"],
                 score=r["score"],

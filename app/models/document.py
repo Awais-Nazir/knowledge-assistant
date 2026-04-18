@@ -13,10 +13,10 @@ class DocumentStatus(str, enum.Enum):
     Using an Enum instead of plain strings prevents typos —
     you can't accidentally write "proccessing" or "READY".
     """
-    PENDING    = "pending"      # just uploaded, job not started
-    PROCESSING = "processing"   # background job is running
-    READY      = "ready"        # chunks + embeddings stored, ready to chat
-    FAILED     = "failed"       # something went wrong during processing
+    PENDING    = "PENDING"      # just uploaded, job not started
+    PROCESSING = "PROCESSING"   # background job is running
+    READY      = "READY"        # chunks + embeddings stored, ready to chat
+    FAILED     = "FAILED"       # something went wrong during processing
 
 
 class Document(UUIDMixin, TimestampMixin, Base):
