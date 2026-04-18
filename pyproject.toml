@@ -1,0 +1,88 @@
+[project]
+name = "knowledge-assistant"
+version = "0.1.0"
+description = "Production-ready AI SaaS backend with modern RAG"
+requires-python = ">=3.12"
+
+dependencies = [
+    # ── Web framework ──────────────────────────────────────────
+    "fastapi>=0.115.0",           # the web framework
+    "uvicorn[standard]>=0.30.0",  # ASGI server that runs FastAPI
+
+    # ── Database ───────────────────────────────────────────────
+    "sqlalchemy[asyncio]>=2.0.0", # async ORM
+    "asyncpg>=0.29.0",            # async PostgreSQL driver
+    "pgvector>=0.3.0",            # pgvector SQLAlchemy type
+    "alembic>=1.13.0",            # database migrations
+
+    # ── Cache / Queue ──────────────────────────────────────────
+    "redis[hiredis]>=5.0.0",      # Redis client (hiredis = faster parser)
+    "celery[redis]>=5.4.0",       # background task queue
+
+    # ── Auth ───────────────────────────────────────────────────
+    "python-jose[cryptography]>=3.3.0",  # JWT encode/decode
+    "bcrypt>=4.0.0",            # password hashing
+
+    # ── Config & Validation ────────────────────────────────────
+    "pydantic>=2.7.0",            # data validation (v2)
+    "pydantic-settings>=2.3.0",   # reads .env into pydantic models
+    "python-dotenv>=1.0.0",       # loads .env file
+    'pydantic[email]',
+    # ── File handling ──────────────────────────────────────────
+    "python-multipart>=0.0.9",    # required for FastAPI file uploads
+    "aiofiles>=23.0.0",           # async file read/write
+
+    # ── Document parsing ───────────────────────────────────────
+    "pypdf>=4.0.0",               # PDF text extraction
+    "python-docx>=1.1.0",         # DOCX text extraction
+
+    # ── RAG — Embeddings ───────────────────────────────────────
+    "openai>=1.35.0",             # OpenAI embeddings + LLM
+    "sentence-transformers>=3.0.0", # HuggingFace local embeddings
+    "rank-bm25>=0.2.2",           # BM25 sparse index
+
+    # ── RAG — Reranking ────────────────────────────────────────
+    "flashrank>=0.2.0",           # local cross-encoder reranker
+
+    # ── Logging ────────────────────────────────────────────────
+    "structlog>=24.0.0",          # structured JSON logging
+
+    # ── HTTP client ────────────────────────────────────────────
+    "httpx>=0.27.0",              # async HTTP (used for Ollama + tests)
+]
+
+[project.optional-dependencies]
+dev = [
+    # ── Testing ────────────────────────────────────────────────
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",     # async test support
+    "pytest-cov>=5.0.0",          # coverage reports
+    "httpx>=0.27.0",              # test client for FastAPI
+
+    # ── Code quality ───────────────────────────────────────────
+    "ruff>=0.4.0",                # linter + formatter (replaces flake8+black)
+    "mypy>=1.10.0",               # type checker
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]   # errors, pyflakes, import sort, upgrades
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"             # every async test runs automatically
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = false                    # we'll tighten this as we go
+ignore_missing_imports = true
