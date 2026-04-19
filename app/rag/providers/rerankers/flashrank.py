@@ -7,6 +7,7 @@ from app.rag.interfaces import BaseReranker, RerankedChunk
 @lru_cache(maxsize=1)
 def _load_ranker():
     from flashrank import Ranker
+
     return Ranker()
 
 
@@ -30,10 +31,7 @@ class FlashRankReranker(BaseReranker):
         ranker = _load_ranker()
         request = RerankRequest(
             query=query,
-            passages=[
-    {"index": i, "text": doc}
-    for i, doc in enumerate(documents)
-],
+            passages=[{"index": i, "text": doc} for i, doc in enumerate(documents)],
         )
 
         loop = asyncio.get_event_loop()
@@ -42,7 +40,6 @@ class FlashRankReranker(BaseReranker):
             lambda: ranker.rerank(request),
         )
         reranked = [
-            
             RerankedChunk(
                 index=r["index"],
                 score=r["score"],

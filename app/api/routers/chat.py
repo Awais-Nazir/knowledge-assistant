@@ -48,9 +48,7 @@ async def list_sessions(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    return await chat_service.list_sessions(
-        db, current_user, page, page_size
-    )
+    return await chat_service.list_sessions(db, current_user, page, page_size)
 
 
 @router.get(
@@ -62,6 +60,4 @@ async def get_session(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    return await chat_service.get_session_detail(
-        db, current_user, session_id
-    )
+    return await chat_service.get_session_detail(db, current_user, session_id)

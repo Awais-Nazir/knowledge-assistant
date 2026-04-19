@@ -1,5 +1,4 @@
 import uuid
-from pathlib import Path
 
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,13 +18,11 @@ from app.storage.local import get_storage
 ALLOWED_MIME_TYPES = {
     "application/pdf": ".pdf",
     "text/plain": ".txt",
-    "application/vnd.openxmlformats-officedocument"
-    ".wordprocessingml.document": ".docx",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
 }
 
 
 class DocumentService:
-
     async def upload(
         self,
         db: AsyncSession,
@@ -71,6 +68,7 @@ class DocumentService:
 
         # trigger background processing job
         from app.workers.embedding_tasks import process_document
+
         process_document.delay(str(document.id))
 
         return DocumentResponse.model_validate(document)
@@ -100,9 +98,7 @@ class DocumentService:
         user: User,
         document_id: uuid.UUID,
     ) -> None:
-        document = await document_repo.get_by_id_and_user(
-            db, document_id, user.id
-        )
+        document = await document_repo.get_by_id_and_user(db, document_id, user.id)
         if not document:
             raise NotFoundError("Document", document_id)
 

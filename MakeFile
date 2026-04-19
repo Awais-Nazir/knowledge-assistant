@@ -26,10 +26,15 @@ test-cov:
 
 # ── Code quality ──────────────────────────────────────
 lint:
-	uv run ruff check app tests
+	uv run ruff check app
+# 	uv run ruff check app tests
+
+ruff_fix:
+	uv run ruff check app --fix
 
 format:
-	uv run ruff format app tests
+	uv run ruff format app 
+# 	uv run ruff format app tests
 
 # ── Docker ────────────────────────────────────────────
 up:

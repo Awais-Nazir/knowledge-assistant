@@ -9,7 +9,6 @@ from app.repositories.base import BaseRepository
 
 
 class ChatSessionRepository(BaseRepository[ChatSession]):
-
     async def get_by_id_and_user(
         self,
         db: AsyncSession,
@@ -32,9 +31,7 @@ class ChatSessionRepository(BaseRepository[ChatSession]):
         page_size: int = 20,
     ) -> tuple[list[ChatSession], int]:
         count_result = await db.execute(
-            select(func.count(ChatSession.id)).where(
-                ChatSession.user_id == user_id
-            )
+            select(func.count(ChatSession.id)).where(ChatSession.user_id == user_id)
         )
         total = count_result.scalar_one()
 
@@ -49,7 +46,6 @@ class ChatSessionRepository(BaseRepository[ChatSession]):
 
 
 class ChatMessageRepository(BaseRepository[ChatMessage]):
-
     async def get_session_messages(
         self,
         db: AsyncSession,

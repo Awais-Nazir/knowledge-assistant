@@ -37,8 +37,10 @@ async def run_rag_pipeline(
     )
 
     if not candidates:
+
         async def _empty():
             yield "I couldn't find any relevant information in your documents."
+
         return _empty()
 
     # ── Stage 2: Reranking ─────────────────────────────────
@@ -49,9 +51,7 @@ async def run_rag_pipeline(
     )
 
     # map reranked results back to full chunk objects
-    top_chunks: list[RetrievedChunk] = [
-        candidates[r.index] for r in reranked
-    ]
+    top_chunks: list[RetrievedChunk] = [candidates[r.index] for r in reranked]
 
     # ── Stage 3: Prompt building ───────────────────────────
     system_prompt, user_prompt = build_prompt(

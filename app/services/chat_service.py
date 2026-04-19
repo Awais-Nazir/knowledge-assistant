@@ -16,13 +16,11 @@ from app.schemas.chat import (
     SessionResponse,
 )
 
-
 # trigger memory summarisation after this many messages
 MEMORY_TRIGGER_COUNT = 10
 
 
 class ChatService:
-
     async def get_or_create_session(
         self,
         db: AsyncSession,
@@ -51,18 +49,13 @@ class ChatService:
         data: ChatRequest,
     ) -> AsyncGenerator[str, None]:
         # get or create session
-        session = await self.get_or_create_session(
-            db, user, data.session_id
-        )
+        session = await self.get_or_create_session(db, user, data.session_id)
         await db.commit()
 
         # load conversation history
-        messages = await chat_message_repo.get_session_messages(
-            db, session.id
-        )
+        messages = await chat_message_repo.get_session_messages(db, session.id)
         recent_messages = [
-            {"role": m.role, "content": m.content}
-            for m in messages[-6:]
+            {"role": m.role, "content": m.content} for m in messages[-6:]
         ]
 
         # load memory if exists
@@ -112,9 +105,7 @@ class ChatService:
             await db.commit()
 
             # trigger memory if conversation is long enough
-            all_messages = await chat_message_repo.get_session_messages(
-                db, session.id
-            )
+            all_messages = await chat_message_repo.get_session_messages(db, session.id)
             if len(all_messages) >= MEMORY_TRIGGER_COUNT:
                 await self._update_memory(db, session.id, user.id, all_messages)
                 await db.commit()
@@ -137,11 +128,11 @@ class ChatService:
 
         # build text to summarise
         conversation_text = "\n".join(
-            f"{m.role.upper()}: {m.content}"
-            for m in new_messages
+            f"{m.role.upper()}: {m.content}" for m in new_messages
         )
 
         from app.rag.factory import get_llm
+
         llm = get_llm()
 
         summary_parts = []
@@ -194,15 +185,11 @@ class ChatService:
         user: User,
         session_id: uuid.UUID,
     ) -> SessionDetailResponse:
-        session = await chat_session_repo.get_by_id_and_user(
-            db, session_id, user.id
-        )
+        session = await chat_session_repo.get_by_id_and_user(db, session_id, user.id)
         if not session:
             raise NotFoundError("ChatSession", session_id)
 
-        messages = await chat_message_repo.get_session_messages(
-            db, session.id
-        )
+        messages = await chat_message_repo.get_session_messages(db, session.id)
         return SessionDetailResponse(
             session=SessionResponse.model_validate(session),
             messages=[MessageResponse.model_validate(m) for m in messages],

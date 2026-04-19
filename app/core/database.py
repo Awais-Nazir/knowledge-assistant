@@ -14,17 +14,17 @@ logger = get_logger(__name__)
 # ── Engine ─────────────────────────────────────────────────────
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=settings.DEBUG,        # logs every SQL query in debug mode
-    pool_size=10,               # number of connections kept open
-    max_overflow=20,            # extra connections allowed under load
-    pool_pre_ping=True,         # test connections before using them
+    echo=settings.DEBUG,  # logs every SQL query in debug mode
+    pool_size=10,  # number of connections kept open
+    max_overflow=20,  # extra connections allowed under load
+    pool_pre_ping=True,  # test connections before using them
 )
 
 # ── Session factory ────────────────────────────────────────────
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,
-    expire_on_commit=False,     # keep objects accessible after commit
+    expire_on_commit=False,  # keep objects accessible after commit
 )
 
 

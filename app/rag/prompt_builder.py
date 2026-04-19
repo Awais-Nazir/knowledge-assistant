@@ -1,6 +1,5 @@
 from app.rag.hybrid_retriever import RetrievedChunk
 
-
 SYSTEM_PROMPT = """You are a helpful AI assistant that answers questions \
 based on the user's documents. 
 
@@ -27,9 +26,7 @@ def build_prompt(
         source = chunk.metadata.get("original_name", "document")
         page = chunk.metadata.get("page_number", "")
         page_info = f" (page {page})" if page else ""
-        context_parts.append(
-            f"[Source {i}: {source}{page_info}]\n{chunk.content}"
-        )
+        context_parts.append(f"[Source {i}: {source}{page_info}]\n{chunk.content}")
     context = "\n\n---\n\n".join(context_parts)
 
     # build memory section

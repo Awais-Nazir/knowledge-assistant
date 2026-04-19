@@ -1,4 +1,4 @@
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 from uuid import UUID
 
 from sqlalchemy import select
@@ -9,7 +9,7 @@ from app.models.base import Base
 ModelType = TypeVar("ModelType", bound=Base)
 
 
-class BaseRepository(Generic[ModelType]):
+class BaseRepository[ModelType]:
     """
     Generic CRUD operations shared by every repository.
     Specific repositories inherit this and add their own methods.
@@ -23,9 +23,7 @@ class BaseRepository(Generic[ModelType]):
         db: AsyncSession,
         id: UUID,
     ) -> ModelType | None:
-        result = await db.execute(
-            select(self.model).where(self.model.id == id)
-        )
+        result = await db.execute(select(self.model).where(self.model.id == id))
         return result.scalar_one_or_none()
 
     async def create(
@@ -35,7 +33,7 @@ class BaseRepository(Generic[ModelType]):
     ) -> ModelType:
         instance = self.model(**kwargs)
         db.add(instance)
-        await db.flush()       # writes to DB but doesn't commit yet
+        await db.flush()  # writes to DB but doesn't commit yet
         await db.refresh(instance)  # reload to get server defaults
         return instance
 

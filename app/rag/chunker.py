@@ -69,15 +69,17 @@ def extract_text_from_file(content: bytes, mime_type: str) -> str:
 
     elif mime_type == "application/pdf":
         import io
+
         from pypdf import PdfReader
+
         reader = PdfReader(io.BytesIO(content))
-        return "\n\n".join(
-            page.extract_text() or "" for page in reader.pages
-        )
+        return "\n\n".join(page.extract_text() or "" for page in reader.pages)
 
     elif "wordprocessingml" in mime_type:
         import io
+
         from docx import Document
+
         doc = Document(io.BytesIO(content))
         return "\n\n".join(p.text for p in doc.paragraphs if p.text.strip())
 
