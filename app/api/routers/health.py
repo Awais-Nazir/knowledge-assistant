@@ -3,7 +3,6 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.config import settings
 
 router = APIRouter(tags=["health"])
 
@@ -19,8 +18,10 @@ async def health(db: AsyncSession = Depends(get_db)):
 
     # check redis
     try:
-        from app.core.config import settings
         import redis.asyncio as aioredis
+
+        from app.core.config import settings
+
         r = aioredis.from_url(settings.REDIS_URL)
         await r.ping()
         await r.aclose()

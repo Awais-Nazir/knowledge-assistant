@@ -12,11 +12,11 @@ def _load_model(model_name: str):
     Loading a SentenceTransformer model takes 2-5 seconds.
     """
     from sentence_transformers import SentenceTransformer
+
     return SentenceTransformer(model_name)
 
 
 class HuggingFaceEmbedder(BaseEmbedder):
-
     def __init__(self, model: str = "BAAI/bge-small-en-v1.5"):
         self.model_name = model
 
@@ -27,8 +27,7 @@ class HuggingFaceEmbedder(BaseEmbedder):
         # run in thread pool — SentenceTransformer is synchronous
         loop = asyncio.get_event_loop()
         vectors = await loop.run_in_executor(
-            None,
-            lambda: model.encode(texts, normalize_embeddings=True).tolist()
+            None, lambda: model.encode(texts, normalize_embeddings=True).tolist()
         )
         return vectors
 

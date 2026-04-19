@@ -1,12 +1,12 @@
-from fastapi import Depends, Header
+from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.exceptions import AuthenticationError
 from app.core.security import decode_token
 from app.models.user import User
-from sqlalchemy import select
 
 security = HTTPBearer()
 
@@ -45,5 +45,6 @@ async def require_admin(
 ) -> User:
     if current_user.role != "admin":
         from app.core.exceptions import InsufficientPermissionsError
+
         raise InsufficientPermissionsError()
     return current_user

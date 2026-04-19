@@ -36,9 +36,7 @@ async def list_documents(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    return await document_service.list_documents(
-        db, current_user, page, page_size
-    )
+    return await document_service.list_documents(db, current_user, page, page_size)
 
 
 @router.delete(

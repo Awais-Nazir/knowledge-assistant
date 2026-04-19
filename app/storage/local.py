@@ -1,12 +1,11 @@
-import aiofiles
-import os
 from pathlib import Path
+
+import aiofiles
 
 from app.storage.base import BaseStorage
 
 
 class LocalStorage(BaseStorage):
-
     def __init__(self, base_dir: str):
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(parents=True, exist_ok=True)
@@ -29,4 +28,5 @@ class LocalStorage(BaseStorage):
 
 def get_storage() -> LocalStorage:
     from app.core.config import settings
+
     return LocalStorage(base_dir=settings.LOCAL_UPLOAD_DIR)

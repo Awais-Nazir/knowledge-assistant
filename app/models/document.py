@@ -1,22 +1,29 @@
 import uuid
-from sqlalchemy import String, Integer, Text, ForeignKey, Enum
+from enum import StrEnum
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-import enum
 
 from app.models.base import Base, TimestampMixin, UUIDMixin
 
+if TYPE_CHECKING:
+    from app.models.chunk import DocumentChunk
+    from app.models.user import User
 
-class DocumentStatus(str, enum.Enum):
+
+class DocumentStatus(StrEnum):
     """
     Represents every possible state a document can be in.
     Using an Enum instead of plain strings prevents typos —
     you can't accidentally write "proccessing" or "READY".
     """
-    PENDING    = "PENDING"      # just uploaded, job not started
-    PROCESSING = "PROCESSING"   # background job is running
-    READY      = "READY"        # chunks + embeddings stored, ready to chat
-    FAILED     = "FAILED"       # something went wrong during processing
+
+    PENDING = "PENDING"  # just uploaded, job not started
+    PROCESSING = "PROCESSING"  # background job is running
+    READY = "READY"  # chunks + embeddings stored, ready to chat
+    FAILED = "FAILED"  # something went wrong during processing
 
 
 class Document(UUIDMixin, TimestampMixin, Base):

@@ -11,6 +11,7 @@ class Base(DeclarativeBase):
     Base class for all SQLAlchemy models.
     Every model inherits from this.
     """
+
     pass
 
 
@@ -20,6 +21,7 @@ class TimestampMixin:
     These columns are managed automatically by the database — you
     never set them manually.
     """
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -41,12 +43,15 @@ class UUIDMixin:
     - unique across tables (useful for distributed systems)
     - can be generated in Python before hitting the database
     """
+
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
         nullable=False,
     )
+
+
 # ```
 
 # ---

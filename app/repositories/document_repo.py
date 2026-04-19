@@ -8,7 +8,6 @@ from app.repositories.base import BaseRepository
 
 
 class DocumentRepository(BaseRepository[Document]):
-
     async def get_by_id_and_user(
         self,
         db: AsyncSession,
@@ -32,9 +31,7 @@ class DocumentRepository(BaseRepository[Document]):
     ) -> tuple[list[Document], int]:
         # total count
         count_result = await db.execute(
-            select(func.count(Document.id)).where(
-                Document.user_id == user_id
-            )
+            select(func.count(Document.id)).where(Document.user_id == user_id)
         )
         total = count_result.scalar_one()
 

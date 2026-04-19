@@ -42,6 +42,7 @@ class OllamaLLM(BaseLLM):
                 },
             ) as response:
                 import json
+
                 async for line in response.aiter_lines():
                     if line:
                         data = json.loads(line)

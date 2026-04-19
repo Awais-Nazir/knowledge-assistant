@@ -34,11 +34,10 @@ async def hybrid_retrieve(
     query_vector = await embedder.embed_query(query)
     vector_str = f"[{','.join(str(x) for x in query_vector)}]"
 
-
-# PREVIOUSLY:
-#  vector::vector
-#  NOW:
-#  1 - (embedding <=> CAST(:vector AS vector)) as score
+    # PREVIOUSLY:
+    #  vector::vector
+    #  NOW:
+    #  1 - (embedding <=> CAST(:vector AS vector)) as score
 
     dense_results = await db.execute(
         text("""
@@ -54,7 +53,7 @@ async def hybrid_retrieve(
             "vector": vector_str,
             "user_id": str(user_id),
             "limit": top_k,
-        }
+        },
     )
     dense_rows = dense_results.fetchall()
 

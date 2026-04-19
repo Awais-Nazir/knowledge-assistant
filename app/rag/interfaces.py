@@ -6,14 +6,14 @@ from dataclasses import dataclass
 @dataclass
 class RerankedChunk:
     """A retrieved chunk with its reranking score."""
-    index: int           # original position in the candidate list
-    score: float         # reranker confidence score
-    text: str            # chunk content
-    metadata: dict       # source info — page number, document name etc
+
+    index: int  # original position in the candidate list
+    score: float  # reranker confidence score
+    text: str  # chunk content
+    metadata: dict  # source info — page number, document name etc
 
 
 class BaseEmbedder(ABC):
-
     @abstractmethod
     async def embed(self, texts: list[str]) -> list[list[float]]:
         """
@@ -33,7 +33,6 @@ class BaseEmbedder(ABC):
 
 
 class BaseReranker(ABC):
-
     @abstractmethod
     async def rerank(
         self,
@@ -49,7 +48,6 @@ class BaseReranker(ABC):
 
 
 class BaseLLM(ABC):
-
     @abstractmethod
     async def generate(
         self,

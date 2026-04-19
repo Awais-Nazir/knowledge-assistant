@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import bcrypt
@@ -24,9 +24,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 # ── JWT tokens ─────────────────────────────────────────────────
 def create_access_token(subject: str, extra_data: dict[str, Any] = {}) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-    )
+    expire = datetime.now(UTC) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {
         "sub": subject,
         "exp": expire,
@@ -37,9 +35,7 @@ def create_access_token(subject: str, extra_data: dict[str, Any] = {}) -> str:
 
 
 def create_refresh_token(subject: str) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(
-        days=settings.REFRESH_TOKEN_EXPIRE_DAYS
-    )
+    expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     payload = {
         "sub": subject,
         "exp": expire,

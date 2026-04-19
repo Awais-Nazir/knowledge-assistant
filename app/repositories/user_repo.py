@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import select, update
@@ -9,15 +9,12 @@ from app.repositories.base import BaseRepository
 
 
 class UserRepository(BaseRepository[User]):
-
     async def get_by_email(
         self,
         db: AsyncSession,
         email: str,
     ) -> User | None:
-        result = await db.execute(
-            select(User).where(User.email == email.lower())
-        )
+        result = await db.execute(select(User).where(User.email == email.lower()))
         return result.scalar_one_or_none()
 
     async def get_by_id(
@@ -25,14 +22,11 @@ class UserRepository(BaseRepository[User]):
         db: AsyncSession,
         user_id: UUID,
     ) -> User | None:
-        result = await db.execute(
-            select(User).where(User.id == user_id)
-        )
+        result = await db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
 
 class RefreshTokenRepository(BaseRepository[RefreshToken]):
-
     async def create_token(
         self,
         db: AsyncSession,
@@ -46,7 +40,7 @@ class RefreshTokenRepository(BaseRepository[RefreshToken]):
             token=token,
             expires_at=expires_at,
             is_revoked=False,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
     async def get_by_token(

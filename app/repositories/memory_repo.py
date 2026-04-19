@@ -8,7 +8,6 @@ from app.repositories.base import BaseRepository
 
 
 class MemoryRepository(BaseRepository[ConversationMemory]):
-
     async def get_by_session(
         self,
         db: AsyncSession,

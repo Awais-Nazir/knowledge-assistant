@@ -1,12 +1,12 @@
 from collections.abc import AsyncGenerator
 
 from openai import AsyncOpenAI
+
 from app.core.config import settings
 from app.rag.interfaces import BaseLLM
 
 
 class OpenAILLM(BaseLLM):
-
     def __init__(self, model: str = "gpt-4o-mini"):
         self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
         self.model = model

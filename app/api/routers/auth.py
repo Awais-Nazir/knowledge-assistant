@@ -11,6 +11,7 @@ from app.schemas.auth import (
     RegisterRequest,
     TokenResponse,
 )
+from app.schemas.common import SuccessResponse
 from app.schemas.user import UserResponse
 from app.services.auth_service import auth_service
 
@@ -50,7 +51,6 @@ async def refresh(
 ):
     return await auth_service.refresh(db, data)
 
-from app.schemas.common import SuccessResponse
 
 @router.post(
     "/logout",
@@ -74,6 +74,7 @@ async def logout_all(
 ):
     await auth_service.logout_all(db, str(current_user.id))
     return SuccessResponse(message="Logged out from all devices successfully")
+
 
 # @router.post(
 #     "/logout",

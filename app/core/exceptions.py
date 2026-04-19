@@ -4,10 +4,11 @@ from typing import Any
 # ── Base ───────────────────────────────────────────────────────
 class AppException(Exception):
     """Base exception for all application errors.
-    
+
     Every custom exception inherits from this.
     Allows catching all app errors in one place with except AppException.
     """
+
     def __init__(
         self,
         message: str,
@@ -25,6 +26,7 @@ class AppException(Exception):
 # ── Auth exceptions ────────────────────────────────────────────
 class AuthenticationError(AppException):
     """Raised when credentials are invalid or missing."""
+
     def __init__(self, message: str = "Authentication failed"):
         super().__init__(
             message=message,
@@ -35,6 +37,7 @@ class AuthenticationError(AppException):
 
 class TokenExpiredError(AppException):
     """Raised when a JWT token has expired."""
+
     def __init__(self, message: str = "Token has expired"):
         super().__init__(
             message=message,
@@ -45,6 +48,7 @@ class TokenExpiredError(AppException):
 
 class InsufficientPermissionsError(AppException):
     """Raised when a user lacks the required role."""
+
     def __init__(self, message: str = "Insufficient permissions"):
         super().__init__(
             message=message,
@@ -56,6 +60,7 @@ class InsufficientPermissionsError(AppException):
 # ── Resource exceptions ────────────────────────────────────────
 class NotFoundError(AppException):
     """Raised when a requested resource does not exist."""
+
     def __init__(self, resource: str, identifier: Any = None):
         message = f"{resource} not found"
         if identifier:
@@ -70,6 +75,7 @@ class NotFoundError(AppException):
 
 class AlreadyExistsError(AppException):
     """Raised when trying to create a resource that already exists."""
+
     def __init__(self, resource: str, field: str, value: Any):
         super().__init__(
             message=f"{resource} with {field} '{value}' already exists",
@@ -82,11 +88,12 @@ class AlreadyExistsError(AppException):
 # ── Validation exceptions ──────────────────────────────────────
 class ValidationError(AppException):
     """Raised when business logic validation fails.
-    
+
     Different from Pydantic's ValidationError which handles
     request schema validation. This handles domain rules —
     e.g. 'document must be processed before chatting with it'.
     """
+
     def __init__(self, message: str, details: Any = None):
         super().__init__(
             message=message,
@@ -99,6 +106,7 @@ class ValidationError(AppException):
 # ── File exceptions ────────────────────────────────────────────
 class FileTooLargeError(AppException):
     """Raised when an uploaded file exceeds the size limit."""
+
     def __init__(self, max_size_mb: int):
         super().__init__(
             message=f"File exceeds maximum allowed size of {max_size_mb}MB",
@@ -110,6 +118,7 @@ class FileTooLargeError(AppException):
 
 class UnsupportedFileTypeError(AppException):
     """Raised when an uploaded file type is not allowed."""
+
     def __init__(self, file_type: str, allowed_types: list[str]):
         super().__init__(
             message=f"File type '{file_type}' is not supported",
@@ -122,6 +131,7 @@ class UnsupportedFileTypeError(AppException):
 # ── RAG exceptions ─────────────────────────────────────────────
 class DocumentNotReadyError(AppException):
     """Raised when a user tries to chat with a document still processing."""
+
     def __init__(self, document_id: str):
         super().__init__(
             message="Document is still being processed, please wait",
@@ -133,6 +143,7 @@ class DocumentNotReadyError(AppException):
 
 class RAGPipelineError(AppException):
     """Raised when the RAG pipeline fails during retrieval or generation."""
+
     def __init__(self, message: str = "RAG pipeline failed", details: Any = None):
         super().__init__(
             message=message,
@@ -144,6 +155,7 @@ class RAGPipelineError(AppException):
 
 class ProviderNotConfiguredError(AppException):
     """Raised when a requested AI provider is not configured."""
+
     def __init__(self, provider_type: str, provider_name: str):
         super().__init__(
             message=f"Provider '{provider_name}' is not configured for {provider_type}",

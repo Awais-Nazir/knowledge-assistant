@@ -1,4 +1,5 @@
 import uuid
+from typing import TYPE_CHECKING
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import ForeignKey, Index, Integer, Text
@@ -6,6 +7,9 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin, UUIDMixin
+
+if TYPE_CHECKING:
+    from app.models.document import Document
 
 
 class DocumentChunk(UUIDMixin, TimestampMixin, Base):
@@ -32,9 +36,7 @@ class DocumentChunk(UUIDMixin, TimestampMixin, Base):
         nullable=False,
     )
     # for HuggingFace bge-small-en-v1.5
-    embedding: Mapped[list[float]] = mapped_column(
-        Vector(384),
-        nullable=True)
+    embedding: Mapped[list[float]] = mapped_column(Vector(384), nullable=True)
 
     # for HuggingFace bge-large-en-v1.5
     # embedding: Mapped[list[float]] = mapped_column(Vector(1024), nullable=True)

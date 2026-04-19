@@ -9,7 +9,6 @@ logger = structlog.get_logger(__name__)
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
-
     async def dispatch(self, request: Request, call_next) -> Response:
         # generate unique ID for this request
         request_id = str(uuid.uuid4())[:8]

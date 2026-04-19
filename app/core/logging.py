@@ -1,5 +1,6 @@
 import logging
 import sys
+
 import structlog
 
 
@@ -23,7 +24,8 @@ def setup_logging(debug: bool = False) -> None:
     ]
 
     structlog.configure(
-        processors=shared_processors + [
+        processors=shared_processors
+        + [
             structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
         ],
         logger_factory=structlog.stdlib.LoggerFactory(),
@@ -35,7 +37,8 @@ def setup_logging(debug: bool = False) -> None:
         foreign_pre_chain=shared_processors,
         processors=[
             structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-            structlog.dev.ConsoleRenderer() if debug
+            structlog.dev.ConsoleRenderer()
+            if debug
             else structlog.processors.JSONRenderer(),
         ],
     )

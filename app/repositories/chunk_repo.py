@@ -1,11 +1,12 @@
 import uuid
+
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.chunk import DocumentChunk
 from app.repositories.base import BaseRepository
 
 
 class ChunkRepository(BaseRepository[DocumentChunk]):
-
     async def create(
         self,
         db: AsyncSession,

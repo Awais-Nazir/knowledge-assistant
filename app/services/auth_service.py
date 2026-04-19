@@ -1,11 +1,10 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (
     AlreadyExistsError,
     AuthenticationError,
-    NotFoundError,
 )
 from app.core.security import (
     create_access_token,
@@ -14,7 +13,6 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
-from app.models.user import User
 from app.repositories.user_repo import refresh_token_repo, user_repo
 from app.schemas.auth import (
     AccessTokenResponse,
@@ -27,7 +25,6 @@ from app.schemas.user import UserResponse
 
 
 class AuthService:
-
     async def register(
         self,
         db: AsyncSession,
@@ -78,9 +75,7 @@ class AuthService:
         refresh_token = create_refresh_token(subject=str(user.id))
 
         # store refresh token in database
-        expires_at = datetime.now(timezone.utc) + timedelta(
-            days=7
-        )
+        expires_at = datetime.now(UTC) + timedelta(days=7)
         await refresh_token_repo.create_token(
             db,
             user_id=user.id,
@@ -100,17 +95,15 @@ class AuthService:
     ) -> AccessTokenResponse:
         # decode and validate refresh token
         payload = decode_token(data.refresh_token, expected_type="refresh")
-        user_id = payload.get("sub")
+        _ = payload.get("sub")
 
         # check token exists in database and is not revoked
-        token_record = await refresh_token_repo.get_by_token(
-            db, data.refresh_token
-        )
+        token_record = await refresh_token_repo.get_by_token(db, data.refresh_token)
         if not token_record or token_record.is_revoked:
             raise AuthenticationError("Invalid or revoked refresh token")
 
         # check token not expired
-        if token_record.expires_at < datetime.now(timezone.utc):
+        if token_record.expires_at < datetime.now(UTC):
             raise AuthenticationError("Refresh token expired")
 
         # fetch user
@@ -136,9 +129,8 @@ class AuthService:
         user_id: str,
     ) -> None:
         from uuid import UUID
-        await refresh_token_repo.revoke_all_for_user(
-            db, UUID(user_id)
-        )
+
+        await refresh_token_repo.revoke_all_for_user(db, UUID(user_id))
 
 
 auth_service = AuthService()
