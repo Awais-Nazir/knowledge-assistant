@@ -42,5 +42,6 @@ async def health(db: AsyncSession = Depends(get_db)):
         "dependencies": {
             "database": db_status,
             "redis": redis_status,
+            "version": "1.0.0",
         },
     }
