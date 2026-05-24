@@ -6,26 +6,30 @@ services:
     env_file: .env
     ports:
       - "8000:8000"
+    volumes:
+      - uploads_data:/app/uploads        # ← add this
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     command: >
-      sh -c "alembic upgrade head &&
-             uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4"
+      sh -c "uv run alembic upgrade head &&
+             uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"
     restart: unless-stopped
 
   worker:
     build: .
     container_name: ka_worker
     env_file: .env
+    volumes:
+      - uploads_data:/app/uploads        # ← same volume, same path
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
+    command: uv run celery -A app.workers.celery_app worker --loglevel=info --pool=solo
     restart: unless-stopped
 
   postgres:
@@ -61,7 +65,6 @@ services:
     container_name: ka_nginx
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - ./deployment/nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
@@ -71,3 +74,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  uploads_data:          # ← declare the new volume here
