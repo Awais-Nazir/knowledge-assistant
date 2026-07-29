@@ -45,3 +45,6 @@ Build a production-ready, scalable FastAPI backend where multiple users can regi
 
 ## About Me
 I'm a Software Engineering undergraduate at the University of Engineering & Technology (UET) Taxila — currently in my final year and expected to graduate in September 2026. I'm passionate about turning ideas into real-world products, especially in Artificial Intelligence, Machine Learning, Computer Vision, and Natural Language Processing. I believe in continuous learning through hands-on projects and real-world problem solving.
+
+
+EDIT: Now an Engineer right NOW
