@@ -1,7 +1,13 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel
+from typing import Annotated
+
+from pydantic import BaseModel, StringConstraints
+
+
+class RenameSessionRequest(BaseModel):
+    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
 
 
 class ChatRequest(BaseModel):

@@ -9,6 +9,8 @@ from app.core.database import get_db
 from app.models.user import User
 from app.schemas.chat import (
     ChatRequest,
+    RenameSessionRequest,
+    SessionResponse,
     SessionDetailResponse,
     SessionListResponse,
 )
@@ -61,3 +63,22 @@ async def get_session(
     current_user: User = Depends(get_current_active_user),
 ):
     return await chat_service.get_session_detail(db, current_user, session_id)
+
+
+@router.patch("/sessions/{session_id}", response_model=SessionResponse)
+async def rename_session(
+    session_id: uuid.UUID,
+    data: RenameSessionRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    return await chat_service.rename_session(db, current_user, session_id, data.title)
+
+
+@router.delete("/sessions/{session_id}", status_code=204)
+async def delete_session(
+    session_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    await chat_service.delete_session(db, current_user, session_id)
