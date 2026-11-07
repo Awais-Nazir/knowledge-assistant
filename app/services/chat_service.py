@@ -50,6 +50,8 @@ class ChatService:
     ) -> AsyncGenerator[str, None]:
         # get or create session
         session = await self.get_or_create_session(db, user, data.session_id)
+        if data.session_id is None:
+            session.title = data.message[:50]
         await db.commit()
 
         # load conversation history
@@ -96,11 +98,6 @@ class ChatService:
                 role="assistant",
                 content=complete_response,
             )
-
-            # update session title from first message
-            if len(messages) == 0:
-                session.title = data.message[:50]
-                await chat_session_repo.save(db, session)
 
             await db.commit()
 
@@ -185,15 +182,27 @@ class ChatService:
         user: User,
         session_id: uuid.UUID,
     ) -> SessionDetailResponse:
-        session = await chat_session_repo.get_by_id_and_user(db, session_id, user.id)
-        if not session:
-            raise NotFoundError("ChatSession", session_id)
-
+        session = await self._owned_session(db, user, session_id)
         messages = await chat_message_repo.get_session_messages(db, session.id)
         return SessionDetailResponse(
             session=SessionResponse.model_validate(session),
             messages=[MessageResponse.model_validate(m) for m in messages],
         )
+
+    async def _owned_session(self, db: AsyncSession, user: User, session_id: uuid.UUID):
+        session = await chat_session_repo.get_by_id_and_user(db, session_id, user.id)
+        if not session:
+            raise NotFoundError("ChatSession", session_id)
+        return session
+
+    async def rename_session(self, db: AsyncSession, user: User, session_id: uuid.UUID, title: str):
+        session = await self._owned_session(db, user, session_id)
+        session.title = title
+        return await chat_session_repo.save(db, session)
+
+    async def delete_session(self, db: AsyncSession, user: User, session_id: uuid.UUID):
+        session = await self._owned_session(db, user, session_id)
+        await chat_session_repo.delete(db, session)
 
 
 chat_service = ChatService()
