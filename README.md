@@ -1,34 +1,39 @@
-# Smart Knowledge Assistant
+# Knowledge Assistant
 
-A multi-tenant AI knowledge assistant backend built with FastAPI, PostgreSQL, and Retrieval-Augmented Generation (RAG).
+A multi-tenant RAG backend built with FastAPI and PostgreSQL. You upload your own documents and chat with them. Each user's documents, chats and search results stay separate from everyone else's.
 
-[![Python](https://img.shields.io/badge/Python-3.12+-blue?logo=python)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?logo=postgresql)](https://www.postgresql.org/)
-[![Status](https://img.shields.io/badge/Status-In%20Development-orange)]()
+Live app: [ai-rag.awaisnazir.tech](https://ai-rag.awaisnazir.tech). It's a web client called Folio that runs on this API, and you need to create an account to use it.
 
-## Overview
+Status: in development. The last two sections list what works and what doesn't.
 
-I started this project to find out what a knowledge assistant looks like when it's more than a chatbot with a nice prompt. The idea is simple: you upload your own documents, they become your personal knowledge base, and you ask questions about them in a chat.
+## Why I built it
 
-The backend is multi-tenant, so every user's documents, conversations, and knowledge base stay separate from everyone else's.
+I wanted to see what a knowledge assistant looks like when it's more than a chatbot with a nice prompt. Calling an LLM from an endpoint is the easy part. Most of the work is around it: processing documents, generating embeddings, retrieving the right passages, designing the database, running background jobs and structuring the API.
 
-Plugging an LLM into an endpoint is the easy part. Most of my time goes into what surrounds it: processing documents, generating embeddings, retrieving the right passages, designing the database, running background jobs, and structuring the API.
+## How it works
 
-It's still a work in progress. Some parts are implemented, and others are still being reworked.
+When you upload a document, a Celery worker extracts the text, splits it into chunks, embeds them and stores them in PostgreSQL with pgvector.
 
-## What's in it
+When you ask a question:
 
-The project covers a handful of areas:
+1. The question is embedded and searched against your own chunks two ways: vector search with pgvector and keyword search with BM25.
+2. The two rankings are merged with reciprocal rank fusion into 20 candidates.
+3. FlashRank reranks the candidates and the top 5 are kept.
+4. The prompt is built from those chunks, a summary of the earlier conversation and the most recent messages.
+5. The LLM streams its answer back over server-sent events.
 
-- Users can register, log in, and reach protected API routes.
-- Documents are uploaded and managed as part of a user's knowledge base.
-- Content is extracted from supported file formats and prepared for retrieval.
-- Embeddings are generated and stored so documents can be searched with vector search.
-- Chat retrieves relevant information from a user's documents to give context-aware answers, and it keeps the conversation history.
-- Work that shouldn't block an API request runs as asynchronous background jobs.
-
-What exactly is covered keeps changing as I build.
+```mermaid
+flowchart LR
+    subgraph Ingest
+        UP[Upload] --> API1[FastAPI] --> Q[Celery and Redis]
+        Q --> EX[Extract and chunk] --> EM[Embed] --> DB[(PostgreSQL + pgvector)]
+    end
+    subgraph Ask
+        QU[Question] --> API2[FastAPI] --> HR[Hybrid retrieval]
+        DB --> HR
+        HR --> RR[Rerank] --> PB[Build prompt] --> LLM[LLM] --> ST[Streamed answer]
+    end
+```
 
 ## Technology stack
 
@@ -48,123 +53,68 @@ What exactly is covered keeps changing as I build.
 | Logging | Structlog |
 | Testing and code quality | Pytest, Ruff, Mypy |
 
-## Architecture
-
-This is the flow I'm aiming for. Treat it as a conceptual overview, not a promise that every box and arrow is wired up today.
-
-```mermaid
-flowchart TD
-    U[User / Client] --> API[FastAPI]
-    API --> AUTH[Authentication]
-    API --> DOC[Document Management]
-    API --> CHAT[Chat API]
-
-    DOC --> PROCESS[Document Processing]
-    PROCESS --> EMB[Embedding Generation]
-    EMB --> DB[(PostgreSQL + pgvector)]
-
-    CHAT --> RET[Document Retrieval]
-    RET --> RERANK[Reranking]
-    RERANK --> LLM[Language Model]
-    LLM --> RESPONSE[AI Response]
-
-    DOC --> QUEUE[Background Jobs]
-    QUEUE --> PROCESS
-```
+Models are picked through environment variables. The defaults are OpenAI's `text-embedding-3-small` for embeddings and `gpt-4o-mini` for the LLM, with FlashRank for reranking. `.env.example` lists the other provider options.
 
 ## Project structure
 
-The backend is split into separate areas so routes, core infrastructure, and business logic stay easy to maintain. Right now the main application has:
-
-- `app/api/routers/`: route modules for authentication, documents, chat, and health checks.
-- `app/core/`: configuration, database setup, logging, middleware, and exception handling.
-- `alembic/`: migration configuration and revisions.
+- `app/api/routers/`: routes for auth, documents, chat and health checks.
+- `app/services/` and `app/repositories/`: business logic and database access.
+- `app/rag/`: chunking, hybrid retrieval, reranking, prompt building and the pipeline that ties them together.
+- `app/workers/`: Celery app and background tasks.
+- `app/models/` and `app/schemas/`: SQLAlchemy models and Pydantic schemas.
+- `app/core/`: configuration, database setup, logging, middleware and exception handling.
+- `alembic/`: migrations.
 - `tests/`: automated tests.
-
-Expect this layout to change as new features and modules arrive.
 
 ## Getting started
 
-### Prerequisites
-
-You'll need:
-
-- Python 3.12 or later
-- PostgreSQL with the pgvector extension
-- Redis
-- [uv](https://docs.astral.sh/uv/) for Python dependency management
-
-### Installation
-
-Clone the repository:
+You need Python 3.12 or later, [uv](https://docs.astral.sh/uv/), and Docker (for PostgreSQL with pgvector, and Redis).
 
 ```bash
 git clone https://github.com/Awais-Nazir/knowledge-assistant.git
 cd knowledge-assistant
-```
-
-Install the dependencies:
-
-```bash
 uv sync --extra dev
+cp .env.example .env
 ```
 
-### Environment configuration
+Open `.env` and set at least `SECRET_KEY` and `OPENAI_API_KEY`. The database and Redis URLs already match the Docker Compose file. Don't commit your real `.env`.
 
-Create a local environment file and fill in the settings you need. Depending on which features you run, that includes the database connection, authentication settings, allowed frontend origins, and AI provider credentials.
-
-**Never commit your real `.env` file, API keys, database passwords, or any other credentials.**
-
-### Database setup
-
-Make sure PostgreSQL is running and that the database and the pgvector extension are available. Then apply the migrations:
+Start PostgreSQL and Redis, then apply the migrations:
 
 ```bash
+docker compose up -d
 uv run alembic upgrade head
 ```
 
-### Run the API
-
-Start the development server:
+Run the API and the worker in two terminals:
 
 ```bash
-uv run uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload --port 8000
+uv run celery -A app.workers.celery_app worker --loglevel=info
 ```
 
-In a development environment, the API docs are available at:
+On Windows, add `--pool=solo` to the Celery command.
 
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
+The same commands are available as `make up`, `make migrate`, `make run` and `make worker`.
 
-The application configuration turns these docs endpoints off in production mode.
+In development, the API docs are at `http://localhost:8000/docs` (Swagger) and `http://localhost:8000/redoc`. They are turned off when `APP_ENV` is `production`.
 
-> Note: Background workers and any other infrastructure should be started according to the project's current configuration.
+Run the tests with `uv run pytest -v`.
 
-## Development
+## What works today
 
-I build this project in small steps and use it to try out backend ideas and see what trade-offs come up in AI applications.
+- Register, log in, refresh and log out with JWT, plus an endpoint for the current user.
+- Upload, list and delete documents. Processing runs in a Celery worker, so uploads don't block requests.
+- Hybrid retrieval and reranking as described above, scoped to the current user.
+- Streaming chat, with sessions you can list, open, rename and delete.
+- Alembic migrations, Docker Compose for local services, a production compose file with an nginx config, and a GitHub Actions workflow.
 
-The goal goes beyond connecting an LLM to an API. I'm after the system around it: reliable data handling, user isolation, document processing, good retrieval quality, and backend services that stay maintainable.
+## Not done yet
 
-## Current status
-
-In development. Features, architecture, and implementation details may change as I keep working on it.
-
-## Future improvements
-
-Things I plan to keep working on:
-
-- Better document extraction and chunking.
-- Experiments with hybrid retrieval and reranking.
-- Tighter tenant isolation and access control.
-- Better background processing and failure handling.
-- More automated tests and better observability.
-- Evaluating retrieval quality and how relevant the responses are.
+- The test suite is three placeholder tests (config, password hashing, exceptions). Nothing tests retrieval, the auth endpoints or tenant isolation yet.
+- The BM25 index is rebuilt from all of a user's chunks on every question. That is fine for a small library and slow for a large one. Moving keyword search into PostgreSQL full-text search is the likely fix.
+- There is no retrieval evaluation, so I can't yet say how good the answers are, only that the pipeline runs.
 
 ## Author
 
-**Muhammad Awais Nazir**
-
-I'm a backend developer who likes building reliable systems and adding AI to practical applications.
-
-- GitHub: [Awais-Nazir](https://github.com/Awais-Nazir)
+Muhammad Awais Nazir, a backend engineer. [Portfolio](https://awaisnazir.tech) | [GitHub](https://github.com/Awais-Nazir)
